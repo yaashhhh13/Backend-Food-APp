@@ -1,9 +1,12 @@
 const cloudinary = require("cloudinary");
+const dotenv = require("dotenv")
+
+dotenv.config()
 
 cloudinary.config({
-    cloud_name: "das4vzabk",
-    api_key: "326884228521657",
-    api_secret: "MoQM73UNziX4gx6ZfurjGtaRDFQ"
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
 const ImageUploadContainer = async(req, res) => {
