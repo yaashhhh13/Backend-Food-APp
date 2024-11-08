@@ -6,77 +6,54 @@ const nodemailer = require("nodemailer");
 
 
 const userRegisterController = async (req, res) => {
-
     try {
-        const existingUser = await userModel.findOne({ email: req.body.email });
+        const { name, email, password, confirmPassword, profilePicture } = req.body;
+
+        // Check if user already exists
+        const existingUser = await userModel.findOne({ email });
         if (existingUser) {
-            return res.status(200).send({
+            return res.status(400).send({
                 message: "User already exists",
                 success: false
             });
         }
 
-        const password = req.body.password;
+        // Password and Confirm Password Check
+        if (password !== confirmPassword) {
+            return res.status(400).send({
+                message: "Passwords do not match",
+                success: false
+            });
+        }
+
+        // Hash password
         const salt = await bcrypt.genSalt(10);
-        const hashPassword = await bcrypt.hash(password, salt);
-        req.body.password = hashPassword;
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        const confirmPassword = await bcrypt.hash(req.body.confirmPassword, salt);
-
-        const otp = otpGenerator.generate(6, {
-            digits: true,
-            upperCaseAlphabets: false,
-            lowerCaseAlphabets: false,
-            upperCase: false,
-            specialChars: false
-        });
-
-        req.body.confirmPassword = confirmPassword;
-
+        // Create new user
         const newUser = new userModel({
-            name: req.body.name,
-            email: req.body.email,
-            profilePicture: req.body.profilePicture,
-            password: req.body.password,
-            confirmPassword: req.body.confirmPassword,
-            otp: otp
+            name,
+            email,
+            profilePicture,
+            password: hashedPassword
         });
 
         await newUser.save();
+
+        // Generate JWT token
         const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-        const transporter = nodemailer.createTransport({
-            service: "Gmail",
-            auth: {
-                user: "yashh.s1333@gmail.com",
-                pass: "mygamecskovdutgp"
-            }
-        });
-
-        const mailOptions = {
-            from: "Food Delivery App",
-            to: req.body.email,
-            subject: "OTP for email verification",
-            text: `Your OTP for verification is ${otp}`
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                return res.status(500).send("Error sending email");
-            }
-            // Send response only after the email is sent successfully
-            res.status(201).send({
-                message: "OTP sent to email",
-                data: {
-                    user: newUser,
-                    token
-                },
-                success: true
-            });
+        // Send success response
+        res.status(201).send({
+            message: "User registered successfully",
+            data: {
+                user: newUser,
+                token
+            },
+            success: true
         });
     } catch (error) {
-        console.log(error);
+        console.error("Error registering user:", error);
         return res.status(500).send({
             message: "Error registering user",
             success: false

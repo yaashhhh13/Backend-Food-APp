@@ -10,8 +10,6 @@ router.post("/get-user", protect, authController)
 
 router.post("/login", loginController)
 
-router.post("/verifyOTP", verifyOTPController)
-
 router.put("/UpdateProfiledetails", protect, UpdateProfileDetails)
 
 module.exports = router
