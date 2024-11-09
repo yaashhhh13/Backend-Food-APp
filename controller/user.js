@@ -1,8 +1,9 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 const userModel = require("../model/user.js");
 const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
+
 
 
 const userRegisterController = async (req, res) => {
